@@ -1,0 +1,52 @@
+
+html, body, main
+{
+    height: 100%;
+}
+
+.center-stuff
+{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.buttons
+{
+    display: flex;
+    width: 800px;
+    align-self: center;
+    justify-content:space-around;
+    margin-top: 2em;
+}
+
+.game-button
+{
+    width: 200px;
+    height: 200px;
+}
+
+.score-info-container
+{
+    display: flex;
+    flex-direction: column;
+}
+
+#score-display, #who-won-last
+{
+    align-self: center;
+    font-size: large;
+}
+
+.centered-flexcontainer
+{
+    align-self: center;
+}
+
+#reset-button
+{
+    margin-top: 1em;
+    width: 100px;
+    height: 50px;
+}

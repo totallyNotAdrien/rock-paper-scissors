@@ -1,6 +1,18 @@
 let options = ["rock", "paper", "scissors"];
 let playerScore = 0;
 let computerScore = 0;
+const ROCK = 0;
+const PAPER = 1;
+const SCISSORS = 2;
+
+const maxRounds = 5;
+
+const winStates =
+{
+    PLAYER_WIN: "player_win",
+    COMPUTER_WIN: "computer_win",
+    TIE: "tie"
+};
 
 class InputInfo
 {
@@ -12,7 +24,31 @@ class InputInfo
     }
 }
 
-function game()
+const rockButton = document.querySelector("#rock-button");
+rockButton.addEventListener('click', () =>
+{
+    playRound(ROCK, computerPlay());
+});
+
+const paperButton = document.querySelector("#paper-button");
+paperButton.addEventListener('click', () =>
+{
+    playRound(PAPER, computerPlay());
+});
+
+const scissorsButton = document.querySelector("#scissors-button");
+scissorsButton.addEventListener('click', () =>
+{
+    playRound(SCISSORS, computerPlay());
+});
+
+const scoreDisplay = document.querySelector("#score-display");
+const whoWonLast = document.querySelector("#who-won-last");
+
+const resetButton = document.querySelector("#reset-button");
+resetButton.addEventListener('click', reset);
+
+function game1()
 {
     playerScore = 0;
     computerScore = 0;
@@ -49,6 +85,8 @@ function game()
     }
 }
 
+
+
 function computerPlay()
 {
     let choice = Math.floor(Math.random() * 3);
@@ -57,27 +95,53 @@ function computerPlay()
 
 function playRound(playerSelection, computerSelection)
 {
-    let playerSelectionIndex;
-    let computerSelectionIndex;
-    let info = new InputInfo(false, -1, -1);
-    checkValid(info, playerSelection, computerSelection);
-    if (info.valid)
+    if (playerScore < maxRounds && computerScore < maxRounds)
     {
-        playerSelectionIndex = info.playerChoice;
-        computerSelectionIndex = info.computerChoice;
-        if (playerSelectionIndex === (computerSelectionIndex + 1) % 3)
+        let playerSelectionIndex;
+        let computerSelectionIndex;
+        let info = new InputInfo(false, -1, -1);
+        let winner;
+        checkValid(info, playerSelection, computerSelection);
+        if (info.valid)
         {
-            playerScore++;
-            return `You Win! ${capitalize(options[playerSelectionIndex])} beats ${capitalize(options[computerSelectionIndex])}`;
-        }
-        else if (computerSelectionIndex === (playerSelectionIndex + 1) % 3)
-        {
-            computerScore++;
-            return `You Lose! ${capitalize(options[computerSelectionIndex])} beats ${capitalize(options[playerSelectionIndex])}`;
-        }
-        else
-        {
-            return `Tie Game! You both picked ${capitalize(options[playerSelectionIndex])}`;
+            playerSelectionIndex = info.playerChoice;
+            computerSelectionIndex = info.computerChoice;
+            if (playerSelectionIndex === (computerSelectionIndex + 1) % 3)
+            {
+                playerScore++;
+                winner = winStates.PLAYER_WIN;
+            }
+            else if (computerSelectionIndex === (playerSelectionIndex + 1) % 3)
+            {
+                computerScore++;
+                winner = winStates.COMPUTER_WIN
+            }
+            else
+            {
+                winner = winStates.TIE;
+            }
+            updateScoreDisplay();
+            let output;
+            switch (winner)
+            {
+                case winStates.PLAYER_WIN:
+                    output = "Point for You";
+                    break;
+                case winStates.COMPUTER_WIN:
+                    output = "Point for Computer";
+                    break;
+                default:
+                    output = "Tie";
+            }
+            if(playerScore >= 5 || computerScore >= 5)
+            {
+                whoWonLast.textContent = playerScore >= 5 ? "You Win!" : "Computer Wins!";
+                resetButton.style.display = "block";
+            }
+            else
+            {
+                whoWonLast.textContent = output;
+            }
         }
     }
     return false;
@@ -85,13 +149,11 @@ function playRound(playerSelection, computerSelection)
 
 function checkValid(info, playerSelection, computerSelection)
 {
-    let playerSelectionIndex;
-    let computerSelectionIndex;
     if (typeof (playerSelection) === typeof ("") && typeof (computerSelection) === typeof (""))
     {
-        info.valid = true;
         info.playerChoice = convertToOptionIndex(playerSelection);
         info.computerChoice = convertToOptionIndex(computerSelection);
+        info.valid = info.playerChoice >= 0 && info.computerChoice >= 0;
     }
     else if (typeof (playerSelection) === typeof (1) && typeof (computerSelection) === typeof (1))
     {
@@ -105,13 +167,22 @@ function checkValid(info, playerSelection, computerSelection)
         info.valid = false;
         return;
     }
+}
 
-    if (playerSelectionIndex < 0 || computerSelectionIndex < 0)
-    {
-        console.log("Invalid Input");
-        info.valid = false;
-        return;
-    }
+function reset()
+{
+    playerScore = 0;
+    computerScore = 0;
+    updateScoreDisplay();
+    whoWonLast.style.whiteSpace = "pre";
+    whoWonLast.textContent = " ";
+    resetButton.style.display = "none";
+}
+
+function updateScoreDisplay()
+{
+    scoreDisplay.style.whiteSpace = "pre";
+    scoreDisplay.textContent = `Your Score: ${playerScore}        Computer Score: ${computerScore}`;
 }
 
 function capitalize(text)
