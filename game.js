@@ -1,22 +1,24 @@
-let options = ["rock", "paper", "scissors"];
 let playerScore = 0;
 let computerScore = 0;
+
+const NUM_OPTIONS = 3;
 const ROCK = 0;
 const PAPER = 1;
 const SCISSORS = 2;
 
-const maxRounds = 5;
+const maxScore = 5;
 
 const winStates =
 {
-    PLAYER_WIN: "player_win",
-    COMPUTER_WIN: "computer_win",
-    TIE: "tie"
+    PLAYER_WIN: "PLAYER_WIN",
+    COMPUTER_WIN: "COMPUTER_WIN",
+    TIE: "TIE",
+    ERROR: "ERROR"
 };
 
 class InputInfo
 {
-    constructor(valid, playerChoice, computerChoice)
+    constructor(playerChoice, computerChoice, valid = false)
     {
         this.valid = valid;
         this.playerChoice = playerChoice;
@@ -48,124 +50,110 @@ const whoWonLast = document.querySelector("#who-won-last");
 const resetButton = document.querySelector("#reset-button");
 resetButton.addEventListener('click', reset);
 
-function game1()
-{
-    playerScore = 0;
-    computerScore = 0;
-    let roundsCompleted = 0;
-    do
-    {
-        let input = prompt("Choose rock, paper, or scissors");
-        let output = playRound(convertToOptionIndex(input), computerPlay());
-        if (!output)
-        {
-            console.log("Round could not be completed");
-        }
-        else
-        {
-            console.log(`Your Score: ${playerScore}, Computer Score: ${computerScore}`);
-            console.log(output);
-            roundsCompleted++;
-        }
-    } while (roundsCompleted < 5);
-
-    console.log("-----------------------------------");
-    console.log(`Your Score: ${playerScore}, Computer Score: ${computerScore}`);
-    if (playerScore > computerScore)
-    {
-        console.log("You win overall!");
-    }
-    else if (computerScore > playerScore)
-    {
-        console.log("Computer wins overall!");
-    }
-    else
-    {
-        console.log("It's a Draw!");
-    }
-}
-
-
 
 function computerPlay()
 {
-    let choice = Math.floor(Math.random() * 3);
+    let choice = Math.floor(Math.random() * NUM_OPTIONS);
     return choice;
 }
 
 function playRound(playerSelection, computerSelection)
 {
-    if (playerScore < maxRounds && computerScore < maxRounds)
+    if (playerScore < maxScore && computerScore < maxScore)
     {
-        let playerSelectionIndex;
-        let computerSelectionIndex;
-        let info = new InputInfo(false, -1, -1);
-        let winner;
-        checkValid(info, playerSelection, computerSelection);
+        let info = new InputInfo(-1, -1, false);
+        checkValidity(info, playerSelection, computerSelection);
         if (info.valid)
         {
-            playerSelectionIndex = info.playerChoice;
-            computerSelectionIndex = info.computerChoice;
-            if (playerSelectionIndex === (computerSelectionIndex + 1) % 3)
-            {
-                playerScore++;
-                winner = winStates.PLAYER_WIN;
-            }
-            else if (computerSelectionIndex === (playerSelectionIndex + 1) % 3)
-            {
-                computerScore++;
-                winner = winStates.COMPUTER_WIN
-            }
-            else
-            {
-                winner = winStates.TIE;
-            }
+            let winner = getWinner(info);
             updateScoreDisplay();
-            let output;
-            switch (winner)
-            {
-                case winStates.PLAYER_WIN:
-                    output = "Point for You";
-                    break;
-                case winStates.COMPUTER_WIN:
-                    output = "Point for Computer";
-                    break;
-                default:
-                    output = "Tie";
-            }
-            if(playerScore >= 5 || computerScore >= 5)
-            {
-                whoWonLast.textContent = playerScore >= 5 ? "You Win!" : "Computer Wins!";
-                resetButton.style.display = "block";
-            }
-            else
-            {
-                whoWonLast.textContent = output;
-            }
+            displayRoundWinner(winner);
+            tryDisplayGameWinner();
         }
     }
-    return false;
 }
 
-function checkValid(info, playerSelection, computerSelection)
+//rock paper scissors' options are cyclic with each option beating the one
+//immediately "before" as defined above, so modulo can be used instead 
+//of comparing strings
+function getWinner(info)
 {
-    if (typeof (playerSelection) === typeof ("") && typeof (computerSelection) === typeof (""))
+    let winner = winStates.ERROR;
+    if (info instanceof InputInfo && info.valid)
     {
-        info.playerChoice = convertToOptionIndex(playerSelection);
-        info.computerChoice = convertToOptionIndex(computerSelection);
-        info.valid = info.playerChoice >= 0 && info.computerChoice >= 0;
+        if (info.playerChoice === (info.computerChoice + 1) % NUM_OPTIONS)
+        {
+            playerScore++;
+            winner = winStates.PLAYER_WIN;
+        }
+        else if (info.computerChoice === (info.playerChoice + 1) % NUM_OPTIONS)
+        {
+            computerScore++;
+            winner = winStates.COMPUTER_WIN;
+        }
+        else if(info.playerChoice === info.computerChoice)
+        {
+            winner = winStates.TIE;
+        }
     }
-    else if (typeof (playerSelection) === typeof (1) && typeof (computerSelection) === typeof (1))
+    return winner;
+}
+
+function checkValidity(info, playerSelection, computerSelection)
+{
+    if (info instanceof InputInfo)
     {
-        info.valid = playerSelection >= 0 && computerSelection >= 0;
-        info.playerChoice = playerSelection;
-        info.computerChoice = computerSelection;
+        info.valid = false;
+        if (typeof playerSelection === typeof 1 && typeof computerSelection === typeof 1)
+        {
+            info.valid = playerSelection >= 0 && computerSelection >= 0;
+            info.playerChoice = playerSelection % NUM_OPTIONS;
+            info.computerChoice = computerSelection % NUM_OPTIONS;
+        }
+        else
+        {
+            console.error("ERROR: Invalid data type for player or computer selection");
+            info.valid = false;
+        }
     }
     else
     {
-        console.log("Invalid Input");
-        info.valid = false;
-        return;
+        console.error("ERROR: No InputInfo");
+    }
+}
+
+function updateScoreDisplay()
+{
+    scoreDisplay.style.whiteSpace = "pre";
+    scoreDisplay.textContent = `Your Score: ${playerScore}        Computer Score: ${computerScore}`;
+}
+
+function displayRoundWinner(winner)
+{
+    let output = " ";
+    switch (winner)
+    {
+        case winStates.PLAYER_WIN:
+            output = "Point for You";
+            break;
+        case winStates.COMPUTER_WIN:
+            output = "Point for Computer";
+            break;
+        case winStates.TIE:
+            output = "Tie";
+            break;
+        default:
+            console.log("Round winner error");
+    }
+    whoWonLast.textContent = output;
+}
+
+function tryDisplayGameWinner()
+{
+    if (playerScore >= 5 || computerScore >= 5)
+    {
+        whoWonLast.textContent = (playerScore >= 5) ? "You Win!" : "Computer Wins!";
+        resetButton.style.visibility = "visible";
     }
 }
 
@@ -176,23 +164,5 @@ function reset()
     updateScoreDisplay();
     whoWonLast.style.whiteSpace = "pre";
     whoWonLast.textContent = " ";
-    resetButton.style.display = "none";
-}
-
-function updateScoreDisplay()
-{
-    scoreDisplay.style.whiteSpace = "pre";
-    scoreDisplay.textContent = `Your Score: ${playerScore}        Computer Score: ${computerScore}`;
-}
-
-function capitalize(text)
-{
-    return text[0].toUpperCase() + text.substr(1);
-}
-
-function convertToOptionIndex(optionString)
-{
-    optionString = optionString.trim();
-    optionString = optionString.toLowerCase();
-    return options.indexOf(optionString);
+    resetButton.style.visibility = "hidden";
 }
