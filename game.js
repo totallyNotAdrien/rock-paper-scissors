@@ -2,6 +2,7 @@ let playerScore = 0;
 let computerScore = 0;
 
 const NUM_OPTIONS = 3;
+//cyclic options: paper beats rock, scissors beats paper, rock beats scissors
 const ROCK = 0;
 const PAPER = 1;
 const SCISSORS = 2;
@@ -65,33 +66,34 @@ function playRound(playerSelection, computerSelection)
         checkValidity(info, playerSelection, computerSelection);
         if (info.valid)
         {
-            let winner = getWinner(info);
+            let winner = getRoundWinner(info);
             updateScoreDisplay();
             displayRoundWinner(winner);
-            tryDisplayGameWinner();
+            tryToDisplayGameWinner();
         }
     }
 }
 
-//rock paper scissors' options are cyclic with each option beating the one
-//immediately "before" as defined above, so modulo can be used instead 
-//of comparing strings
-function getWinner(info)
+function getRoundWinner(info)
 {
     let winner = winStates.ERROR;
     if (info instanceof InputInfo && info.valid)
     {
-        if (info.playerChoice === (info.computerChoice + 1) % NUM_OPTIONS)
+        let playerChoseNextOptionInCycle = info.playerChoice === (info.computerChoice + 1) % NUM_OPTIONS;
+        let computerChoseNextOptionInCycle = info.computerChoice === (info.playerChoice + 1) % NUM_OPTIONS;
+        let choicesAreTheSame = info.playerChoice === info.computerChoice;
+
+        if (playerChoseNextOptionInCycle)
         {
             playerScore++;
             winner = winStates.PLAYER_WIN;
         }
-        else if (info.computerChoice === (info.playerChoice + 1) % NUM_OPTIONS)
+        else if (computerChoseNextOptionInCycle)
         {
             computerScore++;
             winner = winStates.COMPUTER_WIN;
         }
-        else if(info.playerChoice === info.computerChoice)
+        else if (choicesAreTheSame)
         {
             winner = winStates.TIE;
         }
@@ -104,7 +106,7 @@ function checkValidity(info, playerSelection, computerSelection)
     if (info instanceof InputInfo)
     {
         info.valid = false;
-        if (typeof playerSelection === typeof 1 && typeof computerSelection === typeof 1)
+        if (typeof playerSelection === typeof 2 && typeof computerSelection === typeof 2)
         {
             info.valid = playerSelection >= 0 && computerSelection >= 0;
             info.playerChoice = playerSelection % NUM_OPTIONS;
@@ -148,7 +150,7 @@ function displayRoundWinner(winner)
     whoWonLast.textContent = output;
 }
 
-function tryDisplayGameWinner()
+function tryToDisplayGameWinner()
 {
     if (playerScore >= 5 || computerScore >= 5)
     {

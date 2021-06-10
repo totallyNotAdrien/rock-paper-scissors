@@ -1,12 +1,34 @@
 
-html, body, main
+header 
 {
+    height: 25vh;
+}
+
+h1
+{
+    margin: 0;
+}
+
+#rule-list
+{
+    display: flex;
     height: 100%;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.rule
+{
+    font-size: 13pt;
+    margin: 20px auto;
+    padding: 0;
 }
 
 .center-stuff
 {
-    height: 100%;
+    margin-top: 100px;
+    height: 50%;
     display: flex;
     flex-direction: column;
     justify-content: center;
